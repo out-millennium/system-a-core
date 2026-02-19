@@ -1,4 +1,5 @@
 # core/models.py
+
 from pydantic import BaseModel
 
 class InitCredit(BaseModel):
