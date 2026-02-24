@@ -3,7 +3,7 @@
 from fastapi import FastAPI, HTTPException
 from core.models import InitCredit, Transfer, Burn
 from core import ledger
-from .db import get_balance, init_db
+from .db import get_balance, init_db, get_ledger_entries
 
 app = FastAPI(title="System A Core")
 
@@ -42,3 +42,19 @@ def read_balance(account_id: str):
         "account_id": account_id,
         "balance": balance
     }
+
+
+@app.get("/ledger")
+def read_ledger(limit: int = 50, offset: int = 0):
+    try:
+        return get_ledger_entries(limit=limit, offset=offset)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/ledger/{account_id}")
+def read_account_ledger(account_id: str, limit: int = 50, offset: int = 0):
+    try:
+        return get_ledger_entries(limit=limit, offset=offset, account_id=account_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
