@@ -1,34 +1,71 @@
-# System A — Core Declarations
+# System A
 
-System A is a formal computational record system for registering, storing, and transferring quantitative records of conditional units A between account identifiers.
+System A is a neutral computational ledger system.
 
-System A:
-- is not a currency
-- is not an asset
-- is not a financial or investment instrument
-- does not represent value, price, or economic meaning
-- does not create rights, obligations, or guarantees
+It records quantitative transfers of abstract units "A" between string identifiers ("accounts") in a deterministic and append-only manner.
 
-## Status
+System A does not define economic value, ownership, rights, obligations, or legal status.  
+Any external interpretation of recorded units exists strictly outside the system.
 
-The declarative corpus of System A is frozen and published as Release v1.0.0.
+---
 
-Any interpretation of System A or units A as having economic, legal, financial, or regulatory meaning exists exclusively outside the system and is not recognized by System A.
+## Core Model
 
-## Documentation
+System A consists of:
 
-The authoritative public declarations are located in the `/docs` directory and include Documents 01–10.
+- Accounts (string identifiers)
+- Ledger (immutable append-only record of transfers)
+- Deterministic balance state derived from ledger records
 
-In case of any interpretative conflict, Document 01 prevails.
+No additional semantic layer is embedded in the system.
 
-## Scope
+---
 
-System A operates strictly as a neutral computational ledger.
+## Ledger Properties
 
-No users, ownership, contracts, assets, or economic logic exist within the system.
+- The ledger is append-only.
+- UPDATE and DELETE operations are prohibited.
+- Every transfer is permanently recorded.
+- Historical state is immutable.
 
-## Versioning
+System A guarantees structural immutability of its transaction history.
 
-This repository uses explicit releases to freeze declarative state.
+---
 
-Any change to the meaning, logic, or boundaries of System A requires a new release and a new declaration.
+## Balance Semantics
+
+Account balance is a derived, deterministic state.
+
+It is fully determined by the immutable ledger records and cannot exist independently of them.
+
+Balance does not represent ownership, value, asset, or legal entitlement.  
+It is strictly a computational aggregate of recorded transfers.
+
+---
+
+## Operations
+
+System A supports:
+
+- Account creation
+- Transfer between accounts
+- Initial credit assignment
+- Burn (transfer to null)
+
+All operations are deterministic and transactional.
+
+No economic interpretation is defined or implied by these operations.
+
+---
+
+## Release Policy
+
+Any change to the meaning, logic, or boundaries of System A requires a new release.
+
+Technical safety improvements that do not alter semantic boundaries may be released as patch updates.
+
+---
+
+## Version
+
+Current version: v1.2.2
