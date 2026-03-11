@@ -2,15 +2,24 @@
 
 from pydantic import BaseModel
 
+
 class InitCredit(BaseModel):
     to_account: str
     amount: int
+
 
 class Transfer(BaseModel):
     from_account: str
     to_account: str
     amount: int
+    client_operation_id: str | None = None
+
 
 class Burn(BaseModel):
     from_account: str
     amount: int
+    client_operation_id: str | None = None
+
+
+class AccountCreate(BaseModel):
+    name: str
