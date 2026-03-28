@@ -14,29 +14,32 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 if not DB_PASSWORD:
     raise RuntimeError("DB_PASSWORD environment variable not set")
 
-
 def get_connection():
-    return psycopg.connect(
+    conn = psycopg.connect(
         host=DB_HOST,
         port=DB_PORT,
         dbname=DB_NAME,
         user=DB_USER,
         password=DB_PASSWORD,
     )
-
+    # Set transaction isolation level to SERIALIZABLE for critical operations
+    conn.isolation_level = psycopg.IsolationLevel.SERIALIZABLE
+    return conn
 
 @contextmanager
 def get_cursor():
-
+    """Context manager for database cursor with automatic commit/rollback."""
     conn = get_connection()
-
+    
     try:
-        with conn:
-            with conn.cursor() as cur:
-                yield cur
+        with conn.cursor() as cur:
+            yield cur
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
-
 
 def init_db():
 
@@ -47,16 +50,14 @@ def init_db():
             id SERIAL PRIMARY KEY,
             name TEXT UNIQUE NOT NULL
         );
-        """)
-
+        """
         cur.execute("""
         CREATE TABLE IF NOT EXISTS api_keys (
             key TEXT PRIMARY KEY,
             account_name TEXT REFERENCES accounts(name),
             created_at TIMESTAMPTZ DEFAULT NOW()
         );
-        """)
-
+        """
         cur.execute("""
         CREATE TABLE IF NOT EXISTS ledger (
             id SERIAL PRIMARY KEY,
@@ -73,22 +74,19 @@ def init_db():
 
             timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
-        """)
-
+        """
         cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_ledger_from_account
         ON ledger(from_account);
-        """)
-
+        """
         cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_ledger_to_account
         ON ledger(to_account);
-        """)
-
+        """
         cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_ledger_timestamp
         ON ledger(timestamp);
-        """)
+        """
 
 
 def get_account_by_api_key(cur, api_key):
