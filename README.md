@@ -68,4 +68,4 @@ Technical safety improvements that do not alter semantic boundaries may be relea
 
 ## Version
 
-Current version: v1.2.3
+Current version: v1.3.0
