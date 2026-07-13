@@ -22,7 +22,7 @@ def _lock_account(cur, account: str):
     )
 
 
-def create_account(name: str):
+def create_account(name: str, api_key: str):
 
     with get_cursor() as cur:
 
@@ -30,15 +30,36 @@ def create_account(name: str):
             """
             INSERT INTO accounts (name)
             VALUES (%s)
-            ON CONFLICT (name) DO NOTHING
+            ON CONFLICT (name) DO NOTHING RETURNING name
             """,
             (name,)
+        )
+
+        result = cur.fetchone()
+
+        if result is None:
+            raise ValueError("account already exists")
+
+        cur.execute(
+            """
+            INSERT INTO api_keys (key, account_name)
+            VALUES (%s, %s)
+            """,
+            (api_key, name)
         )
 
 
 def get_balance(account: str):
 
     with get_cursor() as cur:
+
+        cur.execute(
+            "SELECT 1 FROM accounts WHERE name=%s",
+            (account,)
+        )
+
+        if cur.fetchone() is None:
+            raise ValueError("account does not exist")
 
         cur.execute(
             """
@@ -74,6 +95,16 @@ def operation_exists(cur, client_operation_id):
     return cur.fetchone() is not None
 
 
+def account_exists(cur, account: str):
+
+    cur.execute(
+        "SELECT 1 FROM accounts WHERE name=%s",
+        (account,)
+    )
+
+    return cur.fetchone() is not None
+
+
 def init_credit(to_account: str, amount: int):
 
     operation_id = _generate_operation_id()
@@ -82,6 +113,9 @@ def init_credit(to_account: str, amount: int):
         raise ValueError("amount must be positive")
 
     with get_cursor() as cur:
+
+        if not account_exists(cur, to_account):
+            raise ValueError("account does not exist")
 
         _lock_account(cur, to_account)
 
@@ -123,6 +157,12 @@ def transfer(
 
         if operation_exists(cur, client_operation_id):
             return
+
+        if not account_exists(cur, from_account):
+            raise ValueError("from_account does not exist")
+
+        if not account_exists(cur, to_account):
+            raise ValueError("to_account does not exist")
 
         accounts = sorted([from_account, to_account])
 
@@ -188,6 +228,9 @@ def burn(
         if operation_exists(cur, client_operation_id):
             return
 
+        if not account_exists(cur, from_account):
+            raise ValueError("account does not exist")
+
         _lock_account(cur, from_account)
 
         cur.execute(
@@ -228,3 +271,10 @@ def burn(
                 amount
             )
         )
+
+
+def revoke_api_key(api_key: str):
+    with get_cursor() as cur:
+        cur.execute("DELETE FROM api_keys WHERE key=%s", (api_key,))
+        if cur.rowcount == 0:
+            raise ValueError("api key not found")
