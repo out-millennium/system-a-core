@@ -2,14 +2,19 @@
 
 import os
 import psycopg
+from pathlib import Path
 from contextlib import contextmanager
+from dotenv import load_dotenv
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = int(os.getenv("DB_PORT", 5432))
 DB_NAME = os.getenv("DB_NAME", "system_a_core")
 DB_USER = os.getenv("DB_USER", "system_a")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
+
 
 if not DB_PASSWORD:
     raise RuntimeError("DB_PASSWORD environment variable not set")

@@ -1,0 +1,11 @@
+slowapi
+fastapi
+uvicorn
+psycopg[binary]
+python-dotenv
+alembic
+sqlalchemy
+prometheus-fastapi-instrumentator
+pytest
+pytest-asyncio
+httpx
