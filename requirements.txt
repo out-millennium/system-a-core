@@ -1,11 +1,34 @@
-slowapi
-fastapi
-uvicorn
-psycopg[binary]
-python-dotenv
-alembic
-sqlalchemy
-prometheus-fastapi-instrumentator
-pytest
-pytest-asyncio
-httpx
+# Production lock for Python 3.12-slim, resolved for Linux wheels.
+# Direct runtime dependencies are pinned together with their resolved transitive
+# dependencies. Update this file only through a reviewed resolver run followed
+# by the Core/GRM test suite and production-image verification.
+
+Deprecated==1.3.1
+Mako==1.4.1
+MarkupSafe==3.0.3
+SQLAlchemy==2.0.52
+alembic==1.20.0
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.15.1
+click==8.5.0
+fastapi==0.141.1
+greenlet==3.2.5
+h11==0.16.0
+idna==3.19
+limits==5.8.0
+packaging==26.3
+prometheus-fastapi-instrumentator==8.1.0
+prometheus-client==0.26.0
+psycopg[binary]==3.3.5
+psycopg-binary==3.3.5
+psycopg-pool==3.3.1
+pydantic==2.13.5
+pydantic-core==2.46.5
+python-dotenv==1.2.3
+slowapi==0.1.10
+starlette==1.6.0
+typing-inspection==0.4.4
+typing-extensions==4.16.0
+uvicorn==0.52.4
+wrapt==2.4.1
