@@ -1,0 +1,10 @@
+# Local-only E2E override.
+# Never use this file for production: it publishes only loopback ports so the
+# host Playwright runner can reach the Frontend and its disposable PostgreSQL.
+services:
+  frontend-db:
+    ports:
+      - "127.0.0.1:5433:5432"
+  frontend:
+    ports:
+      - "127.0.0.1:3000:3000"

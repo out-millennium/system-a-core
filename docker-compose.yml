@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16
+    image: postgres:16-alpine
     restart: always
     environment:
       POSTGRES_DB: system_a_core
@@ -8,6 +8,9 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # No host `ports:` — the database is reachable only on the internal Docker
+    # network by service name (db:5432). Never expose a database to the host/
+    # public interface.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U system_a -d system_a_core"]
       interval: 5s
@@ -17,8 +20,16 @@ services:
   core:
     build: .
     restart: always
+    # Reachable only inside the Docker network (nginx proxies /core/*). Not
+    # published to the host, so Core can't be hit in the clear, bypassing TLS
+    # and the security headers. For local debugging, uncomment the 127.0.0.1
+    # bind below (loopback only — never 0.0.0.0).
+    expose:
+      - "8000"
+    # Localhost-only management binding lets the Windows env generator register
+    # Meridian's external key without exposing Core to the LAN/public interface.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     env_file:
       - .env
     environment:
@@ -30,11 +41,28 @@ services:
   grm:
     build: ../grm-service
     restart: always
-    ports:
-      - "8001:8001"
+    expose:
+      - "8001"
+    # ports:
+    #   - "127.0.0.1:8001:8001"
     environment:
       CORE_API_URL: http://core:8000
       CORE_ADMIN_KEY: ${ADMIN_API_KEY}
+      GRM_WEIGHT_UNIVERSE_VERSION: ${GRM_WEIGHT_UNIVERSE_VERSION:-1}
+      GRM_WEIGHT_MAX_SPREAD: ${GRM_WEIGHT_MAX_SPREAD:-0.10}
+      GRM_MIN_WEIGHT_SOURCES: ${GRM_MIN_WEIGHT_SOURCES:-1}
+      GRM_WEIGHT_SOURCE_URLS: ${GRM_WEIGHT_SOURCE_URLS:-}
+      GRM_COINGECKO_ENABLED: ${GRM_COINGECKO_ENABLED:-1}
+      GRM_COINGECKO_PAGES: ${GRM_COINGECKO_PAGES:-1}
+      GRM_COINCAP_ENABLED: ${GRM_COINCAP_ENABLED:-1}
+      GRM_COINCAP_LIMIT: ${GRM_COINCAP_LIMIT:-2000}
+      GRM_IMF_IFS_ENABLED: ${GRM_IMF_IFS_ENABLED:-1}
+      GRM_IMF_IFS_DATAFLOW: ${GRM_IMF_IFS_DATAFLOW:-MFS_MA}
+      GRM_IMF_IFS_VERSION: ${GRM_IMF_IFS_VERSION:-10.0.1}
+      GRM_IMF_IFS_START_PERIOD: ${GRM_IMF_IFS_START_PERIOD:-2015-01}
+      GRM_IMF_IFS_CURRENCY_MAP: ${GRM_IMF_IFS_CURRENCY_MAP:-USD:USA:USD,RUB:RUS:XDC,JPY:JPN:XDC,CAD:CAN:XDC,AUD:AUS:XDC,BRL:BRA:XDC,KRW:KOR:XDC,SEK:SWE:XDC,NOK:NOR:XDC,ZAR:ZAF:XDC,MXN:MEX:XDC,TRY:TUR:XDC}
+      GRM_ECB_M3_ENABLED: ${GRM_ECB_M3_ENABLED:-1}
+      GRM_ECB_M3_URL: ${GRM_ECB_M3_URL:-https://data-api.ecb.europa.eu/service/data/BSI/M.U2.Y.V.M30.X.1.U2.2300.Z01.E?startPeriod=2015-01}
     volumes:
       - grm_data:/app/data
     depends_on:
@@ -43,23 +71,43 @@ services:
   frontend:
     build: ../frontend
     restart: always
-    ports:
-      - "3010:3000"
+    # Internal only; nginx serves the site on 80/443. Publishing 3010 would let
+    # visitors reach Next.js directly on a host/port that does NOT match
+    # NEXTAUTH_URL, which breaks session cookies (the "everything bounces to
+    # /login" symptom). Keep it behind nginx.
+    expose:
+      - "3000"
+    # ports:
+    #   - "127.0.0.1:3010:3000"
+    # Real OAuth keys live in system-a-core/oauth.local.env (NOT shipped with
+    # the project, so re-downloading a new version never overwrites it). Create
+    # it once with your Google/GitHub client id + secret. `required: false`
+    # keeps compose working even if the file is absent.
+    env_file:
+      - path: ./oauth.local.env
+        required: false
     environment:
       CORE_API_URL: http://core:8000
       CORE_ADMIN_KEY: ${ADMIN_API_KEY}
       GRM_SERVICE_URL: http://grm:8001
       DATABASE_URL: postgresql://frontend:${FRONTEND_DB_PASSWORD}@frontend-db:5432/frontend_db
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      VISITOR_IP_HASH_SECRET: ${VISITOR_IP_HASH_SECRET}
+      CORE_HMAC_SECRET: ${CORE_HMAC_SECRET}
       NEXTAUTH_URL: http://localhost
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
     depends_on:
       - core
       - grm
       - frontend-db
 
   nginx:
-    image: nginx:alpine
+    image: nginx:1.29-alpine
     restart: always
+    # The ONLY service published to the host / public interface.
     ports:
       - "80:80"
       - "443:443"
@@ -72,18 +120,28 @@ services:
       - grm
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.5.0
     restart: always
-    ports:
-      - "9090:9090"
+    # Internal only. Scraped by Grafana over the Docker network; reach the UI
+    # via an SSH tunnel or behind nginx with auth if you need it. Loopback bind
+    # is available for local debugging.
+    expose:
+      - "9090"
+    # ports:
+    #   - "127.0.0.1:9090:9090"
     volumes:
       - ../infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../infrastructure/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.1.0
     restart: always
-    ports:
-      - "3001:3000"
+    # Internal only by default. If you must reach Grafana, bind to loopback and
+    # tunnel, or put it behind nginx with authentication — do not publish 0.0.0.0.
+    expose:
+      - "3000"
+    # ports:
+    #   - "127.0.0.1:3001:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
     volumes:
@@ -94,7 +152,7 @@ services:
       - prometheus
 
   frontend-db:
-    image: postgres:16
+    image: postgres:16-alpine
     restart: always
     environment:
       POSTGRES_DB: frontend_db
@@ -102,8 +160,8 @@ services:
       POSTGRES_PASSWORD: ${FRONTEND_DB_PASSWORD}
     volumes:
       - frontend_db_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
+    # No host `ports:` — internal only (frontend-db:5432). Previously published
+    # on 5433, which exposed the app database to the host. Removed.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U frontend -d frontend_db"]
       interval: 5s

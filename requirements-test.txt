@@ -1,0 +1,6 @@
+# Test/CI dependencies for Core. This file is never copied into the
+# production Docker image.
+-r requirements.txt
+httpx==0.28.1
+pytest==9.1.1
+pytest-asyncio==1.4.0
