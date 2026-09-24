@@ -1,71 +1,134 @@
 # System A
 
-System A is a neutral computational ledger system.
+**Version: v2.0.0**
+**Status: Ready for launch**
 
-It records quantitative transfers of abstract units "A" between string identifiers ("accounts") in a deterministic and append-only manner.
+System A is a formally declared, deterministic computational accounting system.
 
-System A does not define economic value, ownership, rights, obligations, or legal status.  
-Any external interpretation of recorded units exists strictly outside the system.
+It records quantitative changes of conditional units **A** between account identifiers according to fixed system rules. Accepted operations are recorded as part of an append-only computational history, and the resulting state is derived from those records.
+
+System A is neutral by definition. It does not define or establish economic value, price, ownership, rights, obligations, payment status, settlement status, or legal meaning for unit A.
+
+Any interpretation beyond the formal computational rules of System A exists outside the system.
 
 ---
 
 ## Core Model
 
-System A consists of:
+The System A Core maintains:
 
-- Accounts (string identifiers)
-- Ledger (immutable append-only record of transfers)
-- Deterministic balance state derived from ledger records
+* account identifiers;
+* quantitative balances;
+* an append-only record of accepted operations;
+* deterministic state derived from recorded operations.
 
-No additional semantic layer is embedded in the system.
+The Core contains no embedded economic interpretation.
 
----
-
-## Ledger Properties
-
-- The ledger is append-only.
-- UPDATE and DELETE operations are prohibited.
-- Every transfer is permanently recorded.
-- Historical state is immutable.
-
-System A guarantees structural immutability of its transaction history.
+A balance is a computational quantity maintained according to the rules of System A. It does not represent ownership, an asset, value, a legal entitlement, or any other external right or claim.
 
 ---
 
-## Balance Semantics
+## Core Operations
 
-Account balance is a derived, deterministic state.
+The formally defined Core operations are:
 
-It is fully determined by the immutable ledger records and cannot exist independently of them.
+* `init_credit` — records an initial quantitative credit within the System A boundary;
+* `transfer` — records a quantitative change between account identifiers;
+* `burn` — irreversibly removes a recorded quantity from the System A state.
 
-Balance does not represent ownership, value, asset, or legal entitlement.  
-It is strictly a computational aggregate of recorded transfers.
+These operations describe computational state changes only.
+
+The Core does not establish or confirm the external cause, purpose, economic meaning, legal basis, ownership, payment, settlement, or other interpretation of an operation.
 
 ---
 
-## Operations
+## Determinism
 
-System A supports:
+System A is designed to operate according to fixed and explicitly defined rules.
 
-- Account creation
-- Transfer between accounts
-- Initial credit assignment
-- Burn (transfer to null)
+Under the same valid inputs and relevant system state, an accepted operation produces the same deterministic computational result.
 
-All operations are deterministic and transactional.
+Operations are validated before being accepted into the system state.
 
-No economic interpretation is defined or implied by these operations.
+---
+
+## Append-Only History
+
+Accepted operations are recorded in an append-only computational history.
+
+Previously accepted records are not treated as mutable application state. Historical records are preserved as part of the system's formal record.
+
+The resulting balance state is derived from the recorded computational history.
+
+---
+
+## Neutrality
+
+System A does not assign economic meaning to unit A.
+
+In particular, System A does not define unit A as:
+
+* money or currency;
+* an asset;
+* an investment;
+* a payment instrument;
+* an ownership interest;
+* a legal right or claim;
+* an obligation;
+* a representation of external value.
+
+External applications, models, calculations, agreements, or interpretations do not change the formal status of unit A inside System A.
+
+---
+
+## Declarative Foundation
+
+System A is governed by ten public declarative documents, numbered **01–10**.
+
+These documents define the formal boundaries, rules, limitations, and interpretation framework of the system.
+
+**Document 01 has supreme priority over the remaining declarations.**
+
+The implementation and operation of System A are intended to remain within these declared boundaries.
+
+Where an external interpretation conflicts with the declarations of System A, the declarations govern the formal meaning of the system.
+
+---
+
+## Transparency
+
+System A is intended to be inspectable through its published source code and declarative documents.
+
+The repository provides the implementation of the System A Core together with the materials necessary to understand its formal computational model.
+
+The source code and repository documentation should not be interpreted as establishing any economic or legal meaning that is not defined by the System A declarations.
 
 ---
 
 ## Release Policy
 
-Any change to the meaning, logic, or boundaries of System A requires a new release.
+System A follows an explicit release boundary.
 
-Technical safety improvements that do not alter semantic boundaries may be released as patch updates.
+Any change to the defined meaning, logic, formal boundaries, or declared behavior of System A requires a new release.
+
+Technical corrections, security improvements, and other changes that do not alter the declared semantic boundaries may be released as patch or minor updates where appropriate.
 
 ---
 
-## Version
+## v2.0.0
 
-Current version: v1.3.0
+Version `v2.0.0` is the complete release of the current System A implementation.
+
+The implementation is considered ready for public launch.
+
+This release establishes the current implementation baseline of System A. Future changes are subject to the release policy and the governing declarations.
+
+---
+
+## Important Notice
+
+System A is a formal computational system.
+
+Nothing in this repository should be interpreted as creating economic value, ownership, a legal right, a payment obligation, a financial instrument, or any other external entitlement.
+
+External use or interpretation of the system remains outside the formal scope of System A.
